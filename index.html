@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kataleya - Mindful Digital Companion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary-sage: #87a878;
+            --primary-terra: #d4a373;
+            --primary-lavender: #b8b8d1;
+            --bg-dark: #1a1a2e;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --text-primary: #f5f5f5;
+            --text-secondary: #a0a0a0;
+            --accent-glow: rgba(135, 168, 120, 0.3);
+            --danger: #e07a5f;
+            --safe: #81b29a;
+            --warning: #f2cc8f;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Ambient Background */
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.4;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(135, 168, 120, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(212, 163, 115, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(184, 184, 209, 0.1) 0%, transparent 50%);
+            animation: ambientShift 20s ease-in-out infinite;
+        }
+
+        @keyframes ambientShift {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        /* App Container */
+        .app-container {
+            max-width: 430px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+            background: rgba(26, 26, 46, 0.8);
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, var(--primary-sage), var(--primary-terra));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .privacy-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(129, 178, 154, 0.1);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--safe);
+            border: 1px solid rgba(129, 178, 154, 0.3);
+        }
+
+        .privacy-indicator::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--safe);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        /* Mood Compass Card */
+        .mood-compass {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mood-compass::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .compass-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .compass-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .compass-value {
+            font-size: 14px;
+            color: var(--primary-sage);
+            font-weight: 600;
+        }
+
+        .compass-visual {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .compass-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                rgba(135, 168, 120, 0.3) 0deg,
+                rgba(212, 163, 115, 0.3) 90deg,
+                rgba(224, 122, 95, 0.3) 180deg,
+                rgba(184, 184, 209, 0.3) 270deg,
+                rgba(135, 168, 120, 0.3) 360deg
+            );
+            position: relative;
+            animation: rotate 30s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .compass-needle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 80px;
+            background: linear-gradient(to top, var(--primary-sage), var(--primary-terra));
+            transform-origin: bottom center;
+            transform: translate(-50%, -100%) rotate(45deg);
+            border-radius: 2px;
+            transition: transform 0.5s ease;
+            box-shadow: 0 0 20px rgba(135, 168, 120, 0.5);
+        }
+
+        .compass-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            background: var(--text-primary);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .compass-labels {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .compass-label {
+            position: absolute;
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .compass-label.top { top: 10px; left: 50%; transform: translateX(-50%); }
+        .compass-label.right { right: 10px; top: 50%; transform: translateY(-50%); }
+        .compass-label.bottom { bottom: 10px; left: 50%; transform: translateX(-50%); }
+        .compass-label.left { left: 10px; top: 50%; transform: translateY(-50%); }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:active {
+            transform: scale(0.98);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 300;
+            color: var(--text-primary);
+        }
+
+        .stat-sub {
+            font-size: 11px;
+            color: var(--primary-sage);
+            margin-top: 4px;
+        }
+
+        /* Sobriety Timeline */
+        .timeline-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .timeline-title {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .days-count {
+            font-size: 32px;
+            font-weight: 200;
+            background: linear-gradient(135deg, var(--primary-sage), var(--primary-terra));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .timeline-visual {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            padding: 0 10px;
+        }
+
+        .timeline-line {
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            right: 20px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 0;
+        }
+
+        .timeline-node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-dark);
+            border: 2px solid var(--primary-sage);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s;
+        }
+
+        .timeline-node.active {
+            background: var(--primary-sage);
+            box-shadow: 0 0 20px rgba(135, 168, 120, 0.4);
+        }
+
+        .timeline-node.future {
+            border-color: rgba(255, 255, 255, 0.2);
+            color: var(--text-secondary);
+        }
+
+        /* Action Cards */
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .action-card {
+            background: linear-gradient(135deg, rgba(135, 168, 120, 0.1), rgba(212, 163, 115, 0.1));
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.05));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .action-card:hover::before {
+            opacity: 1;
+        }
+
+        .action-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .action-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .action-sub {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Ambient Player */
+        .ambient-player {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .player-title {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .player-status {
+            font-size: 12px;
+            color: var(--primary-sage);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .visualizer {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 4px;
+            height: 60px;
+            margin-bottom: 20px;
+        }
+
+        .bar {
+            width: 4px;
+            background: linear-gradient(to top, var(--primary-sage), var(--primary-terra));
+            border-radius: 2px;
+            animation: wave 1s ease-in-out infinite;
+        }
+
+        .bar:nth-child(1) { height: 20%; animation-delay: 0s; }
+        .bar:nth-child(2) { height: 40%; animation-delay: 0.1s; }
+        .bar:nth-child(3) { height: 60%; animation-delay: 0.2s; }
+        .bar:nth-child(4) { height: 80%; animation-delay: 0.3s; }
+        .bar:nth-child(5) { height: 60%; animation-delay: 0.4s; }
+        .bar:nth-child(6) { height: 40%; animation-delay: 0.5s; }
+        .bar:nth-child(7) { height: 20%; animation-delay: 0.6s; }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
+            50% { transform: scaleY(1); opacity: 1; }
+        }
+
+        .player-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .control-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .control-btn.play {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--primary-sage), var(--primary-terra));
+            font-size: 24px;
+        }
+
+        /* Sponsor Section */
+        .sponsor-section {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sponsor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .sponsor-title {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .sponsor-count {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .sponsor-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sponsor-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sponsor-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-sage), var(--primary-terra));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 300;
+        }
+
+        .sponsor-info {
+            flex: 1;
+        }
+
+        .sponsor-name {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .sponsor-status {
+            font-size: 11px;
+            color: var(--safe);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .sponsor-action {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(135, 168, 120, 0.1);
+            border: none;
+            color: var(--primary-sage);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .add-sponsor {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+
+        .add-sponsor:active {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Crisis Button */
+        .crisis-button {
+            background: linear-gradient(135deg, rgba(224, 122, 95, 0.2), rgba(224, 122, 95, 0.1));
+            border: 1px solid rgba(224, 122, 95, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .crisis-button:active {
+            transform: scale(0.98);
+            background: linear-gradient(135deg, rgba(224, 122, 95, 0.3), rgba(224, 122, 95, 0.2));
+        }
+
+        .crisis-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .crisis-text {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--danger);
+            margin-bottom: 4px;
+        }
+
+        .crisis-sub {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 430px;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 12px 24px 24px;
+            display: flex;
+            justify-content: space-around;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 8px 16px;
+            border-radius: 12px;
+        }
+
+        .nav-item:active {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-item.active {
+            color: var(--primary-sage);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-dark);
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 360px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .modal-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(135deg, var(--primary-sage), var(--primary-terra));
+            color: white;
+        }
+
+        .modal-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .modal-btn.danger {
+            background: rgba(224, 122, 95, 0.2);
+            color: var(--danger);
+            border: 1px solid rgba(224, 122, 95, 0.3);
+        }
+
+        /* Breathing Exercise Overlay */
+        .breathing-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            z-index: 500;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .breathing-overlay.active {
+            display: flex;
+        }
+
+        .breath-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--primary-sage), transparent);
+            opacity: 0.3;
+            animation: breathe 8s ease-in-out infinite;
+            position: relative;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.5); opacity: 0.6; }
+        }
+
+        .breath-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            animation: breathText 8s ease-in-out infinite;
+        }
+
+        @keyframes breathText {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .close-breathing {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Privacy Dashboard */
+        .privacy-dashboard {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            z-index: 200;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .privacy-dashboard.active {
+            display: block;
+        }
+
+        .privacy-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+            padding-top: 20px;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .privacy-title {
+            font-size: 24px;
+            font-weight: 300;
+        }
+
+        .privacy-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .privacy-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .privacy-card-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .data-item:last-child {
+            border-bottom: none;
+        }
+
+        .data-label {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .data-status {
+            font-size: 12px;
+            color: var(--safe);
+            background: rgba(129, 178, 154, 0.1);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .data-status.offline {
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        /* Utility Classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+    
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">KATALEYA</div>
+            <div class="privacy-indicator" onclick="openPrivacyDashboard()">
+                <span>Private</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Mood Compass -->
+            <div class="mood-compass fade-in">
+                <div class="compass-header">
+                    <span class="compass-title">Mood Compass</span>
+                    <span class="compass-value" id="moodValue">Balanced</span>
+                </div>
+                <div class="compass-visual">
+                    <div class="compass-circle"></div>
+                    <div class="compass-needle" id="compassNeedle"></div>
+                    <div class="compass-center"></div>
+                    <div class="compass-labels">
+                        <span class="compass-label top">Calm</span>
+                        <span class="compass-label right">Energized</span>
+                        <span class="compass-label bottom">Stressed</span>
+                        <span class="compass-label left">Tired</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid fade-in">
+                <div class="stat-card">
+                    <div class="stat-label">Heart Rate</div>
+                    <div class="stat-value" id="heartRate">72</div>
+                    <div class="stat-sub">bpm • Normal</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Sleep Quality</div>
+                    <div class="stat-value">85%</div>
+                    <div class="stat-sub">7h 20m • Deep</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Grounding</div>
+                    <div class="stat-value">3</div>
+                    <div class="stat-sub">exercises today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Streak</div>
+                    <div class="stat-value">12</div>
+                    <div class="stat-sub">days mindful</div>
+                </div>
+            </div>
+
+            <!-- Sobriety Timeline -->
+            <div class="timeline-card fade-in">
+                <div class="timeline-header">
+                    <span class="timeline-title">Recovery Journey</span>
+                    <span class="days-count">47<span style="font-size:14px; color:var(--text-secondary);"> days</span></span>
+                </div>
+                <div class="timeline-visual">
+                    <div class="timeline-line"></div>
+                    <div class="timeline-node active">1</div>
+                    <div class="timeline-node active">7</div>
+                    <div class="timeline-node active">30</div>
+                    <div class="timeline-node">60</div>
+                    <div class="timeline-node future">90</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="action-grid fade-in">
+                <div class="action-card" onclick="startBreathing()">
+                    <div class="action-icon">🌬️</div>
+                    <div class="action-title">Breathe</div>
+                    <div class="action-sub">4-7-8 Technique</div>
+                </div>
+                <div class="action-card" onclick="openGrounding()">
+                    <div class="action-icon">🧘</div>
+                    <div class="action-title">Ground</div>
+                    <div class="action-sub">5-4-3-2-1 Senses</div>
+                </div>
+                <div class="action-card" onclick="openJournal()">
+                    <div class="action-icon">📝</div>
+                    <div class="action-title">Journal</div>
+                    <div class="action-sub">Voice or text</div>
+                </div>
+                <div class="action-card" onclick="openUrgeSurfing()">
+                    <div class="action-icon">🌊</div>
+                    <div class="action-title">Urge Surf</div>
+                    <div class="action-sub">Ride the wave</div>
+                </div>
+            </div>
+
+            <!-- Ambient Player -->
+            <div class="ambient-player fade-in">
+                <div class="player-header">
+                    <span class="player-title">Forest Rain</span>
+                    <span class="player-status" id="playerStatus">● Playing</span>
+                </div>
+                <div class="visualizer" id="visualizer">
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                </div>
+                <div class="player-controls">
+                    <button class="control-btn" onclick="changeTrack(-1)">⏮</button>
+                    <button class="control-btn play" onclick="togglePlay()" id="playBtn">⏸</button>
+                    <button class="control-btn" onclick="changeTrack(1)">⏭</button>
+                </div>
+            </div>
+
+            <!-- Sponsor Section -->
+            <div class="sponsor-section fade-in">
+                <div class="sponsor-header">
+                    <span class="sponsor-title">Your Circle</span>
+                    <span class="sponsor-count">1/2</span>
+                </div>
+                <div class="sponsor-list">
+                    <div class="sponsor-item">
+                        <div class="sponsor-avatar">M</div>
+                        <div class="sponsor-info">
+                            <div class="sponsor-name">Michael (Sponsor)</div>
+                            <div class="sponsor-status">● Online • 3 years sober</div>
+                        </div>
+                        <button class="sponsor-action" onclick="messageSponsor()">💬</button>
+                    </div>
+                </div>
+                <div class="add-sponsor" onclick="addSponsor()">
+                    <span>+</span>
+                    <span>Invite Second Sponsor</span>
+                </div>
+            </div>
+
+            <!-- Crisis Button -->
+            <div class="crisis-button" onclick="openCrisisModal()">
+                <div class="crisis-icon">🆘</div>
+                <div class="crisis-text">Need Immediate Help?</div>
+                <div class="crisis-sub">Connect with your sponsor or crisis support</div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <div class="nav-item active" onclick="switchTab('home')">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Home</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('insights')">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Insights</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('tools')">
+                <span class="nav-icon">🧰</span>
+                <span class="nav-label">Tools</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('profile')">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Profile</span>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Crisis Modal -->
+    <div class="modal" id="crisisModal">
+        <div class="modal-content">
+            <div class="modal-title">You're not alone</div>
+            <div class="modal-text">
+                If you're experiencing a crisis or feel like you might relapse, help is available immediately. Your sponsor will be notified that you need support.
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn secondary" onclick="closeModal('crisisModal')">Cancel</button>
+                <button class="modal-btn danger" onclick="triggerCrisis()">Contact Support</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sponsor Modal -->
+    <div class="modal" id="sponsorModal">
+        <div class="modal-content">
+            <div class="modal-title">Message Michael</div>
+            <div class="modal-text">
+                Send a quick status update or request a call. Your message is end-to-end encrypted.
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn secondary" onclick="closeModal('sponsorModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="sendMessage()">Send Check-in</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breathing Exercise -->
+    <div class="breathing-overlay" id="breathingOverlay">
+        <button class="close-breathing" onclick="stopBreathing()">✕</button>
+        <div class="breath-circle">
+            <div class="breath-text" id="breathText">Inhale</div>
+        </div>
+        <div style="margin-top: 40px; text-align: center; color: var(--text-secondary);">
+            <div style="font-size: 14px; margin-bottom: 8px;">4-7-8 Breathing</div>
+            <div style="font-size: 12px;">Inhale • Hold • Exhale</div>
+        </div>
+    </div>
+
+    <!-- Privacy Dashboard -->
+    <div class="privacy-dashboard" id="privacyDashboard">
+        <div class="privacy-header">
+            <button class="back-btn" onclick="closePrivacyDashboard()">←</button>
+            <div class="privacy-title">Privacy Center</div>
+        </div>
+
+        <div class="privacy-card">
+            <div class="privacy-card-title">🔒 Data Storage</div>
+            <div class="privacy-card-text">All your data is stored locally on your device using military-grade encryption.</div>
+            <div class="data-item">
+                <span class="data-label">📱 Local Storage</span>
+                <span class="data-status">Encrypted</span>
+            </div>
+            <div class="data-item">
+                <span class="data-label">☁️ Cloud Backup</span>
+                <span class="data-status offline">Disabled</span>
+            </div>
+        </div>
+
+        <div class="privacy-card">
+            <div class="privacy-card-title">📡 Sensors</div>
+            <div class="privacy-card-text">Control which sensors Kataleya can access for mood detection.</div>
+            <div class="data-item">
+                <span class="data-label">❤️ Heart Rate</span>
+                <span class="data-status">Active</span>
+            </div>
+            <div class="data-item">
+                <span class="data-label">😴 Sleep Data</span>
+                <span class="data-status">Active</span>
+            </div>
+            <div class="data-item">
+                <span class="data-label">🎤 Audio Env</span>
+                <span class="data-status offline">Off</span>
+            </div>
+        </div>
+
+        <div class="privacy-card">
+            <div class="privacy-card-title">👥 Sharing</div>
+            <div class="privacy-card-text">Manage what your sponsors can see.</div>
+            <div class="data-item">
+                <span class="data-label">📊 Mood Trends</span>
+                <span class="data-status">Shared</span>
+            </div>
+            <div class="data-item">
+                <span class="data-label">📝 Journal Entries</span>
+                <span class="data-status offline">Private</span>
+            </div>
+        </div>
+
+        <button class="modal-btn danger" style="width: 100%; margin-top: 20px;" onclick="exportData()">
+            Export All Data
+        </button>
+    </div>
+
+    <script>
+        // App State
+        const state = {
+            isPlaying: true,
+            currentTrack: 0,
+            heartRate: 72,
+            mood: 'balanced',
+            breathingActive: false,
+            sponsors: 1
+        };
+
+        const tracks = ['Forest Rain', 'Ocean Waves', 'Night Crickets', 'Pink Noise'];
+
+        // Simulate biometric data updates
+        setInterval(() => {
+            // Update heart rate with realistic variation
+            const variation = Math.floor(Math.random() * 5) - 2;
+            state.heartRate = Math.max(60, Math.min(100, state.heartRate + variation));
+            document.getElementById('heartRate').textContent = state.heartRate;
+
+            // Update mood compass based on heart rate
+            updateMoodCompass();
+        }, 3000);
+
+        function updateMoodCompass() {
+            const needle = document.getElementById('compassNeedle');
+            const moodValue = document.getElementById('moodValue');
+            
+            let rotation, mood;
+            
+            if (state.heartRate < 65) {
+                rotation = -45;
+                mood = 'Restful';
+            } else if (state.heartRate < 75) {
+                rotation = 45;
+                mood = 'Balanced';
+            } else if (state.heartRate < 85) {
+                rotation = 135;
+                mood = 'Active';
+            } else {
+                rotation = 225;
+                mood = 'Elevated';
+            }
+            
+            needle.style.transform = `translate(-50%, -100%) rotate(${rotation}deg)`;
+            moodValue.textContent = mood;
+        }
+
+        // Audio Player Controls
+        function togglePlay() {
+            state.isPlaying = !state.isPlaying;
+            const btn = document.getElementById('playBtn');
+            const visualizer = document.getElementById('visualizer');
+            const status = document.getElementById('playerStatus');
+            
+            if (state.isPlaying) {
+                btn.textContent = '⏸';
+                visualizer.style.opacity = '1';
+                status.textContent = '● Playing';
+                status.style.color = 'var(--primary-sage)';
+            } else {
+                btn.textContent = '▶';
+                visualizer.style.opacity = '0.3';
+                status.textContent = '○ Paused';
+                status.style.color = 'var(--text-secondary)';
+            }
+        }
+
+        function changeTrack(direction) {
+            state.currentTrack = (state.currentTrack + direction + tracks.length) % tracks.length;
+            document.querySelector('.player-title').textContent = tracks[state.currentTrack];
+            
+            // Visual feedback
+            const card = document.querySelector('.ambient-player');
+            card.style.transform = 'scale(0.98)';
+            setTimeout(() => card.style.transform = 'scale(1)', 200);
+        }
+
+        // Breathing Exercise
+        function startBreathing() {
+            document.getElementById('breathingOverlay').classList.add('active');
+            state.breathingActive = true;
+            
+            const texts = ['Inhale...', 'Hold...', 'Exhale...', 'Hold...'];
+            let index = 0;
+            
+            const breathInterval = setInterval(() => {
+                if (!state.breathingActive) {
+                    clearInterval(breathInterval);
+                    return;
+                }
+                document.getElementById('breathText').textContent = texts[index];
+                index = (index + 1) % texts.length;
+            }, 2000);
+        }
+
+        function stopBreathing() {
+            document.getElementById('breathingOverlay').classList.remove('active');
+            state.breathingActive = false;
+        }
+
+        // Crisis Support
+        function openCrisisModal() {
+            document.getElementById('crisisModal').classList.add('active');
+        }
+
+        function triggerCrisis() {
+            closeModal('crisisModal');
+            
+            // Simulate crisis protocol
+            setTimeout(() => {
+                alert('Crisis protocol activated:\n\n• Michael has been notified\n• SAMHSA Helpline: 1-800-662-4357\n• Emergency services: 911\n\nYou are not alone. Help is on the way.');
+            }, 300);
+        }
+
+        // Sponsor System
+        function messageSponsor() {
+            document.getElementById('sponsorModal').classList.add('active');
+        }
+
+        function sendMessage() {
+            closeModal('sponsorModal');
+            setTimeout(() => {
+                alert('Encrypted message sent to Michael.\n\nHe will see your current mood status and check-in request.');
+            }, 300);
+        }
+
+        function addSponsor() {
+            if (state.sponsors >= 2) {
+                alert('Maximum 2 sponsors allowed for quality support.');
+                return;
+            }
+            
+            const name = prompt('Enter sponsor name or email:');
+            if (name) {
+                state.sponsors++;
+                document.querySelector('.sponsor-count').textContent = `${state.sponsors}/2`;
+                
+                // Add new sponsor to list
+                const list = document.querySelector('.sponsor-list');
+                const newSponsor = document.createElement('div');
+                newSponsor.className = 'sponsor-item';
+                newSponsor.innerHTML = `
+                    <div class="sponsor-avatar">${name[0].toUpperCase()}</div>
+                    <div class="sponsor-info">
+                        <div class="sponsor-name">${name}</div>
+                        <div class="sponsor-status" style="color: var(--text-secondary)">○ Offline • Pending</div>
+                    </div>
+                    <button class="sponsor-action" onclick="messageSponsor()">💬</button>
+                `;
+                list.appendChild(newSponsor);
+                
+                // Remove add button if max reached
+                if (state.sponsors >= 2) {
+                    document.querySelector('.add-sponsor').style.display = 'none';
+                }
+            }
+        }
+
+        // Privacy Dashboard
+        function openPrivacyDashboard() {
+            document.getElementById('privacyDashboard').classList.add('active');
+        }
+
+        function closePrivacyDashboard() {
+            document.getElementById('privacyDashboard').classList.remove('active');
+        }
+
+        function exportData() {
+            alert('Preparing encrypted data export...\n\nYour data will be exported as a JSON file with AES-256 encryption.\n\nFile: kataleya_backup_2024.enc');
+        }
+
+        // Modal Helpers
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Navigation
+        function switchTab(tab) {
+            // Update active state
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // Simulate tab switching
+            const content = document.querySelector('.main-content');
+            content.style.opacity = '0';
+            setTimeout(() => {
+                content.style.opacity = '1';
+            }, 200);
+        }
+
+        // Placeholder functions for other features
+        function openGrounding() {
+            alert('5-4-3-2-1 Grounding Exercise:\n\n👁️ 5 things you see\n✋ 4 things you feel\n👂 3 things you hear\n👃 2 things you smell\n👅 1 thing you taste');
+        }
+
+        function openJournal() {
+            alert('Voice Journal:\n\nTap to record your thoughts...\n\n🎤 Recording... 00:00');
+        }
+
+        function openUrgeSurfing() {
+            alert('Urge Surfing:\n\nWatch the wave rise and fall...\n\nThis craving will peak in 20-30 minutes and then subside like a wave.\n\n🌊 Ride it out.');
+        }
+
+        // Close modals on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Kataleya initialized');
+            console.log('Privacy mode: Local-only');
+            console.log('Encryption: AES-256');
+        });
+    </script>
+</body>
+</html>
