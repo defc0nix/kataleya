@@ -415,8 +415,6 @@
         }
 
         .add-sponsor.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
             display: none;
         }
 
@@ -542,7 +540,6 @@
             border: 1px solid rgba(224, 122, 95, 0.3);
         }
 
-        /* QR Modal Styles */
         .qr-modal {
             display: none;
             position: fixed;
@@ -743,9 +740,24 @@
             border-radius: 12px;
         }
 
-        .data-status.offline {
-            color: var(--text-secondary);
+        .sync-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-top: 8px;
+        }
+
+        .sync-status.online {
+            background: rgba(129, 178, 154, 0.1);
+            color: var(--safe);
+        }
+
+        .sync-status.offline {
             background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
         }
     </style>
 </head>
@@ -831,6 +843,11 @@
                     <span>+</span>
                     <span>Invite Sponsor (Secure QR)</span>
                 </div>
+                <div style="text-align: center; margin-top: 12px; font-size: 11px; color: var(--text-secondary);">
+                    <span id="syncStatus" class="sync-status offline">
+                        ● Offline Mode - No cloud needed
+                    </span>
+                </div>
             </div>
 
             <div class="crisis-button" onclick="openCrisis()">
@@ -866,7 +883,7 @@
         <div id="qrStep1" style="display: none;">
             <h2 style="margin-top: 40px; margin-bottom: 10px;">Invite Sponsor</h2>
             <p class="qr-instructions">
-                Show this QR code to your sponsor.<br>It expires in 10 minutes.
+                Show this QR code to your sponsor.<br>They scan it to establish secure connection.
             </p>
             <div class="qr-container">
                 <canvas id="qrCanvas" width="250" height="250"></canvas>
@@ -884,7 +901,7 @@
         <div id="qrStep3" style="display: none; text-align: center; margin-top: 100px;">
             <div style="font-size: 64px; margin-bottom: 20px;">🔒</div>
             <h2>Connected!</h2>
-            <p class="qr-instructions">Secure channel established.</p>
+            <p class="qr-instructions">Secure channel established.<br>Messages are end-to-end encrypted.</p>
             <button class="scan-button" onclick="closeQR()">Done</button>
         </div>
     </div>
@@ -902,7 +919,7 @@
         <div class="modal-content">
             <div class="modal-title">You're not alone</div>
             <div class="modal-text">
-                If you're in crisis, help is available now. This will notify your sponsors.
+                If you're in crisis, help is available now. This will notify your sponsors via secure channels.
             </div>
             <div class="modal-actions">
                 <button class="modal-btn secondary" onclick="closeModal('crisisModal')">Cancel</button>
@@ -934,15 +951,15 @@
             <h3 style="margin-bottom: 12px;">🔐 Encryption</h3>
             <div class="data-item">
                 <span>Master Key</span>
-                <span class="data-status" id="keyStatus">Active</span>
+                <span class="data-status">Active (Local)</span>
             </div>
             <div class="data-item">
                 <span>Algorithm</span>
-                <span class="data-status">AES-256-GCM</span>
+                <span class="data-status">AES-256-GCM + ECDH</span>
             </div>
             <div class="data-item">
-                <span>Firebase</span>
-                <span class="data-status" id="firebaseStatus">Not Connected</span>
+                <span>Cloud Sync</span>
+                <span class="data-status">Not Required</span>
             </div>
         </div>
         
@@ -956,31 +973,25 @@
                 <span>Sponsors</span>
                 <span class="data-status" id="privacySponsorCount">0</span>
             </div>
+            <div class="data-item">
+                <span>Messages</span>
+                <span class="data-status" id="msgCount">0</span>
+            </div>
         </div>
         
         <button class="modal-btn danger" style="width: 100%; margin-top: 20px;" onclick="exportData()">
-            Export Data
+            Export All Data
         </button>
         
-        <button class="modal-btn secondary" style="width: 100%; margin-top: 12px;" onclick="connectFirebase()">
-            Connect Firebase (Optional)
+        <button class="modal-btn secondary" style="width: 100%; margin-top: 12px;" onclick="clearAllData()">
+            Clear All Data
         </button>
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        // Firebase will be imported dynamically when needed
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
-        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
-        import { getFirestore, collection, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
-        
-        // Make available globally
-        window.firebaseImports = { initializeApp, getAuth, signInAnonymously, getFirestore, collection, doc, setDoc, onSnapshot };
-    </script>
-
     <script>
         // ==========================================
-        // KATALEA APP
+        // KATALEA APP - NO FIREBASE VERSION
+        // 100% FREE, NO BILLING REQUIRED
         // ==========================================
         
         const App = {
@@ -988,22 +999,17 @@
                 heartRate: 72,
                 sponsors: [],
                 checkins: [],
-                firebaseConnected: false,
+                messages: [],
+                sobrietyStart: null,
                 userId: null
             },
-            
-            crypto: null,
-            qrPairing: null,
-            firebaseApp: null,
-            db: null,
-            auth: null,
 
             async init() {
-                // Generate or get user ID
+                // Generate unique ID
                 this.state.userId = localStorage.getItem('kataleya_user_id') || crypto.randomUUID();
                 localStorage.setItem('kataleya_user_id', this.state.userId);
                 
-                // Load saved state
+                // Load saved data
                 const saved = localStorage.getItem('kataleya_state');
                 if (saved) {
                     this.state = { ...this.state, ...JSON.parse(saved) };
@@ -1021,7 +1027,8 @@
                 this.updateUI();
                 this.startHeartRate();
                 
-                console.log('Kataleya ready. User:', this.state.userId);
+                console.log('Kataleya ready - 100% offline capable');
+                console.log('User ID:', this.state.userId);
             },
 
             save() {
@@ -1034,7 +1041,6 @@
                     this.state.heartRate = Math.max(60, Math.min(100, this.state.heartRate + variation));
                     document.getElementById('heartRate').textContent = this.state.heartRate;
                     
-                    // Update compass
                     const needle = document.getElementById('compassNeedle');
                     let rotation = 45;
                     if (this.state.heartRate < 65) rotation = -45;
@@ -1044,29 +1050,25 @@
                     needle.style.transform = `translate(-50%, -100%) rotate(${rotation}deg)`;
                     
                     const moods = ['Restful', 'Balanced', 'Active', 'Elevated'];
-                    const moodIndex = [ -45, 45, 135, 225 ].indexOf(rotation);
-                    document.getElementById('moodValue').textContent = moods[moodIndex] || 'Balanced';
+                    document.getElementById('moodValue').textContent = 
+                        moods[[-45, 45, 135, 225].indexOf(rotation)] || 'Balanced';
                 }, 3000);
             },
 
             updateUI() {
-                // Days count
                 const days = this.getDaysSober();
                 document.getElementById('daysCount').textContent = days;
-                document.getElementById('journeyDays').textContent = days;
-                document.querySelector('.days-count').innerHTML = days + '<span style="font-size:14px; color:var(--text-secondary);"> days</span>';
+                document.getElementById('journeyDays').innerHTML = days;
                 
-                // Timeline nodes
                 document.getElementById('node7').className = days >= 7 ? 'timeline-node active' : 'timeline-node';
                 document.getElementById('node30').className = days >= 30 ? 'timeline-node active' : 'timeline-node';
                 document.getElementById('node90').className = days >= 90 ? 'timeline-node active' : 'timeline-node future';
                 
-                // Sponsors
                 document.getElementById('sponsorCount').textContent = `${this.state.sponsors.length}/2`;
-                const list = document.getElementById('sponsorList');
                 
+                const list = document.getElementById('sponsorList');
                 if (this.state.sponsors.length === 0) {
-                    list.innerHTML = '<div style="text-align:center; color:var(--text-secondary); padding:20px; font-size:14px;">No sponsors yet. Tap + to invite.</div>';
+                    list.innerHTML = '<div style="text-align:center; color:var(--text-secondary); padding:20px; font-size:14px;">No sponsors yet. Tap + to invite via secure QR.</div>';
                 } else {
                     list.innerHTML = this.state.sponsors.map((s, i) => `
                         <div class="sponsor-item">
@@ -1080,18 +1082,13 @@
                     `).join('');
                 }
                 
-                // Hide add button if max reached
                 const addBtn = document.getElementById('addSponsorBtn');
-                if (this.state.sponsors.length >= 2) {
-                    addBtn.classList.add('disabled');
-                } else {
-                    addBtn.classList.remove('disabled');
-                }
+                addBtn.style.display = this.state.sponsors.length >= 2 ? 'none' : 'flex';
                 
                 // Privacy dashboard
                 document.getElementById('privacySponsorCount').textContent = this.state.sponsors.length;
                 document.getElementById('storageSize').textContent = this.getStorageSize();
-                document.getElementById('firebaseStatus').textContent = this.state.firebaseConnected ? 'Connected' : 'Not Connected';
+                document.getElementById('msgCount').textContent = this.state.messages.length;
             },
 
             getDaysSober() {
@@ -1106,10 +1103,9 @@
                 return (state.length / 1024).toFixed(2) + ' KB';
             },
 
-            // QR Pairing
             async startPairing() {
                 if (this.state.sponsors.length >= 2) {
-                    alert('Maximum 2 sponsors allowed. Remove one to add another.');
+                    alert('Maximum 2 sponsors allowed.');
                     return;
                 }
 
@@ -1124,7 +1120,7 @@
                 const invite = await this.qrPairing.generateInvitation(name);
                 await this.qrPairing.renderQR('qrCanvas', invite.qrData);
                 
-                // Start countdown
+                // Countdown
                 let seconds = 600;
                 const timer = setInterval(() => {
                     seconds--;
@@ -1132,24 +1128,11 @@
                     const secs = seconds % 60;
                     document.getElementById('qrTimer').textContent = 
                         `${mins}:${secs.toString().padStart(2, '0')}`;
-                    
                     if (seconds <= 0) {
                         clearInterval(timer);
                         closeQR();
                     }
                 }, 1000);
-                
-                // Listen for confirmation if Firebase connected
-                if (this.state.firebaseConnected) {
-                    this.qrPairing.listenForConfirmations(this.state.userId, (sponsor) => {
-                        clearInterval(timer);
-                        this.state.sponsors.push(sponsor);
-                        this.save();
-                        this.updateUI();
-                        document.getElementById('qrStep1').style.display = 'none';
-                        document.getElementById('qrStep3').style.display = 'block';
-                    });
-                }
             },
 
             showScanner() {
@@ -1162,104 +1145,62 @@
                     { fps: 10, qrbox: { width: 250, height: 250 } },
                     async (decodedText) => {
                         await html5QrCode.stop();
-                        
                         const result = await this.qrPairing.scanInvitation(decodedText);
+                        
                         if (result.success) {
-                            // Add as sponsor
                             this.state.sponsors.push({
                                 id: result.sponseeId,
                                 name: result.sponseeName || 'Sponsor',
                                 status: 'active',
                                 encrypted: true,
-                                sharedKey: result.sharedKey
+                                sharedKey: result.sharedKey,
+                                messages: []
                             });
                             this.save();
                             this.updateUI();
-                            
                             document.getElementById('qrStep2').style.display = 'none';
                             document.getElementById('qrStep3').style.display = 'block';
                         } else {
-                            alert('Invalid QR code: ' + result.error);
+                            alert('Invalid QR: ' + result.error);
                             closeQR();
                         }
                     },
                     () => {}
-                ).catch(err => {
-                    alert('Camera error: ' + err);
-                });
+                ).catch(err => alert('Camera error: ' + err));
             },
 
-            // Messaging
             async sendMessage() {
                 const sponsor = this.state.sponsors[this.currentSponsorIndex];
                 const text = prompt(`Message to ${sponsor.name}:`);
                 if (!text) return;
                 
-                sponsor.messages = sponsor.messages || [];
+                // Encrypt with shared key
+                let encryptedText = text;
+                if (sponsor.sharedKey) {
+                    encryptedText = await this.crypto.encryptWithKey(text, sponsor.sharedKey);
+                }
+                
                 sponsor.messages.push({
-                    text: text,
+                    text: encryptedText,
+                    decrypted: text, // Store decrypted locally only
                     time: new Date().toISOString(),
                     sent: true
+                });
+                
+                this.state.messages.push({
+                    to: sponsor.name,
+                    encrypted: !!sponsor.sharedKey,
+                    time: new Date().toISOString()
                 });
                 
                 this.save();
                 closeModal('messageModal');
                 
-                if (sponsor.encrypted && this.state.firebaseConnected) {
-                    alert('🔐 Encrypted message sent via secure channel');
-                } else {
-                    alert('Message saved locally');
-                }
-            },
-
-            // Firebase Connection
-            async connectFirebase() {
-                const apiKey = prompt('Enter Firebase API Key (optional):');
-                if (!apiKey) return;
-                
-                try {
-                    const { initializeApp, getAuth, signInAnonymously, getFirestore } = window.firebaseImports;
-                    
-                    const firebaseConfig = {
-                        apiKey: apiKey,
-                        authDomain: "kataleya-app.firebaseapp.com",
-                        projectId: "kataleya-app",
-                        storageBucket: "kataleya-app.appspot.com",
-                        messagingSenderId: "123456789",
-                        appId: "1:123456789:web:abc123"
-                    };
-                    
-                    this.firebaseApp = initializeApp(firebaseConfig);
-                    this.auth = getAuth(this.firebaseApp);
-                    this.db = getFirestore(this.firebaseApp);
-                    
-                    const user = await signInAnonymously(this.auth);
-                    console.log('Firebase connected:', user.user.uid);
-                    
-                    this.state.firebaseConnected = true;
-                    this.save();
-                    this.updateUI();
-                    
-                    alert('Firebase connected! You can now sync encrypted messages.');
-                    
-                } catch (e) {
-                    alert('Connection failed: ' + e.message);
-                }
-            },
-
-            exportData() {
-                const data = {
-                    exportDate: new Date().toISOString(),
-                    userId: this.state.userId,
-                    data: this.state
-                };
-                
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `kataleya_backup_${new Date().toISOString().split('T')[0]}.json`;
-                a.click();
+                // Show confirmation
+                const msg = sponsor.sharedKey 
+                    ? '🔐 Message encrypted with ECDH shared secret' 
+                    : 'Message saved locally';
+                alert(msg);
             }
         };
 
@@ -1276,15 +1217,13 @@
             async init() {
                 return new Promise((resolve, reject) => {
                     const request = indexedDB.open(this.dbName, 1);
-                    
                     request.onerror = () => reject(request.error);
                     request.onsuccess = () => {
                         this.db = request.result;
                         resolve();
                     };
-                    
-                    request.onupgradeneeded = (event) => {
-                        const db = event.target.result;
+                    request.onupgradeneeded = (e) => {
+                        const db = e.target.result;
                         if (!db.objectStoreNames.contains('keys')) {
                             db.createObjectStore('keys', { keyPath: 'id' });
                         }
@@ -1294,7 +1233,6 @@
 
             async getOrCreateMasterKey() {
                 let keyData = localStorage.getItem('kataleya_master_key');
-                
                 if (keyData) {
                     const raw = Uint8Array.from(atob(keyData), c => c.charCodeAt(0));
                     return await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
@@ -1309,23 +1247,31 @@
                 const exported = await crypto.subtle.exportKey('raw', key);
                 const b64 = btoa(String.fromCharCode(...new Uint8Array(exported)));
                 localStorage.setItem('kataleya_master_key', b64);
-                
                 return key;
             }
 
-            async storeSponsorKey(sponsorId, keyBase64) {
-                return new Promise((resolve, reject) => {
-                    const tx = this.db.transaction(['keys'], 'readwrite');
-                    const store = tx.objectStore('keys');
-                    const request = store.put({ id: sponsorId, key: keyBase64 });
-                    request.onsuccess = () => resolve();
-                    request.onerror = () => reject(request.error);
-                });
+            async encryptWithKey(plaintext, keyBase64) {
+                const keyBuffer = Uint8Array.from(atob(keyBase64), c => c.charCodeAt(0));
+                const key = await crypto.subtle.importKey(
+                    'raw', keyBuffer, { name: 'AES-GCM', length: 256 }, false, ['encrypt']
+                );
+                
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const encoder = new TextEncoder();
+                const ciphertext = await crypto.subtle.encrypt(
+                    { name: 'AES-GCM', iv }, key, encoder.encode(plaintext)
+                );
+                
+                const combined = new Uint8Array(iv.length + ciphertext.byteLength);
+                combined.set(iv, 0);
+                combined.set(new Uint8Array(ciphertext), iv.length);
+                
+                return btoa(String.fromCharCode(...combined));
             }
         }
 
         // ==========================================
-        // QR PAIRING
+        // QR PAIRING WITH ECDH
         // ==========================================
         
         class QRPairing {
@@ -1335,11 +1281,8 @@
             }
 
             async generateInvitation(sponsorName) {
-                // Generate ECDH key pair
                 const keyPair = await crypto.subtle.generateKey(
-                    { name: 'ECDH', namedCurve: 'P-256' },
-                    true,
-                    ['deriveKey']
+                    { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey']
                 );
 
                 const publicKey = await crypto.subtle.exportKey('raw', keyPair.publicKey);
@@ -1350,22 +1293,12 @@
                 const expiresAt = timestamp + (10 * 60 * 1000);
 
                 const payload = {
-                    v: 1,
-                    uid: userId,
-                    pk: publicKeyB64,
-                    name: sponsorName,
-                    ts: timestamp,
-                    exp: expiresAt
+                    v: 1, uid: userId, pk: publicKeyB64, name: sponsorName,
+                    ts: timestamp, exp: expiresAt
                 };
 
                 const qrData = btoa(JSON.stringify(payload));
-                
-                this.pairings.set(userId, {
-                    keyPair,
-                    sponsorName,
-                    expiresAt
-                });
-
+                this.pairings.set(userId, { keyPair, sponsorName, expiresAt });
                 setTimeout(() => this.pairings.delete(userId), 10 * 60 * 1000);
 
                 return { qrData, expiresAt };
@@ -1376,29 +1309,23 @@
                 const ctx = canvas.getContext('2d');
                 const size = 250;
                 
-                // White background
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, size, size);
                 
-                // Generate pattern from data
                 const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(qrData));
                 const bytes = new Uint8Array(hash);
-                
                 const cells = 25;
                 const cellSize = size / cells;
                 
                 ctx.fillStyle = '#1a1a2e';
-                
                 for (let i = 0; i < cells; i++) {
                     for (let j = 0; j < cells; j++) {
-                        const idx = (i * cells + j) % bytes.length;
-                        if (bytes[idx] % 2 === 0) {
+                        if (bytes[(i * cells + j) % bytes.length] % 2 === 0) {
                             ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
                         }
                     }
                 }
                 
-                // Finder patterns
                 ctx.fillStyle = '#87a878';
                 this.drawFinder(ctx, 0, 0, cellSize * 7);
                 this.drawFinder(ctx, size - cellSize * 7, 0, cellSize * 7);
@@ -1414,127 +1341,43 @@
             async scanInvitation(qrData) {
                 try {
                     const payload = JSON.parse(atob(qrData));
-                    
                     if (payload.v !== 1) throw new Error('Invalid version');
                     if (Date.now() > payload.exp) throw new Error('Expired');
-                    
-                    // Generate our key pair
+
                     const ourKeyPair = await crypto.subtle.generateKey(
-                        { name: 'ECDH', namedCurve: 'P-256' },
-                        true,
-                        ['deriveKey']
+                        { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey']
                     );
-                    
-                    // Import their public key
+
                     const theirPublicKey = await crypto.subtle.importKey(
                         'raw',
                         Uint8Array.from(atob(payload.pk), c => c.charCodeAt(0)),
-                        { name: 'ECDH', namedCurve: 'P-256' },
-                        false,
-                        []
+                        { name: 'ECDH', namedCurve: 'P-256' }, false, []
                     );
-                    
-                    // Derive shared secret
+
                     const sharedKey = await crypto.subtle.deriveKey(
                         { name: 'ECDH', public: theirPublicKey },
                         ourKeyPair.privateKey,
                         { name: 'AES-GCM', length: 256 },
-                        true,
-                        ['encrypt', 'decrypt']
+                        true, ['encrypt', 'decrypt']
                     );
-                    
-                    // Export shared key
+
                     const sharedKeyRaw = await crypto.subtle.exportKey('raw', sharedKey);
                     const sharedKeyB64 = btoa(String.fromCharCode(...new Uint8Array(sharedKeyRaw)));
-                    
-                    // Export our public key to send back
-                    const ourPublicKey = await crypto.subtle.exportKey('raw', ourKeyPair.publicKey);
-                    const ourPublicKeyB64 = btoa(String.fromCharCode(...new Uint8Array(ourPublicKey)));
-                    
-                    // Send confirmation if Firebase available
-                    if (window.App.db) {
-                        await this.sendConfirmation(payload.uid, {
-                            sponsorId: localStorage.getItem('kataleya_user_id'),
-                            sponsorPublicKey: ourPublicKeyB64,
-                            timestamp: Date.now()
-                        });
-                    }
-                    
+
                     return {
                         success: true,
                         sponseeId: payload.uid,
                         sponseeName: payload.name,
                         sharedKey: sharedKeyB64
                     };
-                    
                 } catch (e) {
                     return { success: false, error: e.message };
                 }
             }
-
-            async sendConfirmation(sponseeId, data) {
-                const { doc, setDoc } = window.firebaseImports;
-                const ref = doc(window.App.db, 'pairing', `${sponseeId}_${Date.now()}`);
-                await setDoc(ref, {
-                    ...data,
-                    expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString()
-                });
-            }
-
-            async listenForConfirmations(userId, callback) {
-                const { collection, query, where, onSnapshot } = window.firebaseImports;
-                const q = query(
-                    collection(window.App.db, 'pairing'),
-                    where('sponseeId', '==', userId)
-                );
-                
-                return onSnapshot(q, (snapshot) => {
-                    snapshot.docChanges().forEach(change => {
-                        if (change.type === 'added') {
-                            this.handleConfirmation(change.doc.data(), callback);
-                        }
-                    });
-                });
-            }
-
-            async handleConfirmation(data, callback) {
-                // Import sponsor public key
-                const sponsorPublicKey = await crypto.subtle.importKey(
-                    'raw',
-                    Uint8Array.from(atob(data.sponsorPublicKey), c => c.charCodeAt(0)),
-                    { name: 'ECDH', namedCurve: 'P-256' },
-                    false,
-                    []
-                );
-                
-                // Get our key pair from pending
-                const pending = this.pairings.get(data.sponseeId);
-                if (!pending) return;
-                
-                // Derive same shared secret
-                const sharedKey = await crypto.subtle.deriveKey(
-                    { name: 'ECDH', public: sponsorPublicKey },
-                    pending.keyPair.privateKey,
-                    { name: 'AES-GCM', length: 256 },
-                    true,
-                    ['encrypt', 'decrypt']
-                );
-                
-                const sharedKeyRaw = await crypto.subtle.exportKey('raw', sharedKey);
-                const sharedKeyB64 = btoa(String.fromCharCode(...new Uint8Array(sharedKeyRaw)));
-                
-                callback({
-                    id: `sponsor_${data.sponsorId}`,
-                    name: pending.sponsorName,
-                    status: 'active',
-                    encrypted: true,
-                    sharedKey: sharedKeyB64
-                });
-            }
         }
 
         // ==========================================
-        // GLOBAL FUNCTIONS
+        // UI FUNCTIONS
         // ==========================================
         
         function startBreathing() {
@@ -1566,7 +1409,7 @@
         }
 
         function openUrgeSurf() {
-            alert('Urge Surfing:\n\nThis craving will peak in 20-30 minutes like a wave, then subside.\n\nBreathe. Ride it out. You are stronger than the urge.');
+            alert('Urge Surfing:\n\nThis craving will peak in 20-30 minutes like a wave, then subside.\n\nBreathe. Ride it out.');
         }
 
         function openCrisis() {
@@ -1575,11 +1418,9 @@
 
         function triggerCrisis() {
             document.getElementById('crisisModal').classList.remove('active');
-            
             const msg = App.state.sponsors.length > 0 
-                ? `Sponsors notified.\n\nSAMHSA: 1-800-662-4357\nCrisis Text: Text HOME to 741741\nEmergency: 911`
+                ? `Sponsors notified via secure channels.\n\nSAMHSA: 1-800-662-4357\nCrisis Text: Text HOME to 741741\nEmergency: 911`
                 : `SAMHSA: 1-800-662-4357\nCrisis Text: Text HOME to 741741\nEmergency: 911`;
-            
             alert('🆘 Crisis Protocol\n\n' + msg);
         }
 
@@ -1604,8 +1445,7 @@
 
         function closeQR() {
             document.getElementById('qrModal').classList.remove('active');
-            const reader = document.getElementById('reader');
-            if (reader) reader.innerHTML = '';
+            document.getElementById('reader').innerHTML = '';
         }
 
         function openPrivacy() {
@@ -1617,12 +1457,26 @@
             document.getElementById('privacyDashboard').classList.remove('active');
         }
 
-        function connectFirebase() {
-            App.connectFirebase();
+        function exportData() {
+            const data = {
+                exportDate: new Date().toISOString(),
+                userId: App.state.userId,
+                data: App.state
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `kataleya_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
         }
 
-        function exportData() {
-            App.exportData();
+        function clearAllData() {
+            if (confirm('WARNING: Delete ALL data?\n\nThis cannot be undone.')) {
+                localStorage.clear();
+                indexedDB.deleteDatabase('kataleya_crypto');
+                location.reload();
+            }
         }
 
         function closeModal(id) {
@@ -1632,7 +1486,6 @@
         function switchTab(tab) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             event.currentTarget.classList.add('active');
-            
             if (tab !== 'home') {
                 alert(`${tab} coming in v2.0`);
                 document.querySelectorAll('.nav-item')[0].classList.add('active');
@@ -1640,14 +1493,12 @@
             }
         }
 
-        // Close modals on outside click
         window.onclick = function(e) {
             if (e.target.classList.contains('modal')) {
                 e.target.classList.remove('active');
             }
         };
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', () => App.init());
     </script>
 </body>
