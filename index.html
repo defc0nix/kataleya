@@ -3,7 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kataleya - Mindful Digital Companion</title>
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="Kataleya - Privacy-first mindful companion for sobriety and well-being">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons -->
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <link rel="icon" type="image/png" href="icons/icon-72x72.png">
+    
+    <title>Kataleya</title>
+    
     <style>
         * {
             margin: 0;
@@ -35,7 +48,6 @@
             position: relative;
         }
 
-        /* Ambient Background */
         .ambient-bg {
             position: fixed;
             top: 0;
@@ -58,7 +70,6 @@
             66% { transform: translate(-20px, 20px) scale(0.9); }
         }
 
-        /* App Container */
         .app-container {
             max-width: 430px;
             margin: 0 auto;
@@ -71,7 +82,6 @@
             flex-direction: column;
         }
 
-        /* Header */
         .header {
             padding: 20px;
             display: flex;
@@ -99,6 +109,12 @@
             font-size: 12px;
             color: var(--safe);
             border: 1px solid rgba(129, 178, 154, 0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .privacy-indicator:hover {
+            background: rgba(129, 178, 154, 0.2);
         }
 
         .privacy-indicator::before {
@@ -115,7 +131,6 @@
             50% { opacity: 0.5; }
         }
 
-        /* Main Content */
         .main-content {
             flex: 1;
             overflow-y: auto;
@@ -123,7 +138,6 @@
             padding-bottom: 100px;
         }
 
-        /* Mood Compass Card */
         .mood-compass {
             background: var(--bg-card);
             border-radius: 24px;
@@ -239,7 +253,6 @@
         .compass-label.bottom { bottom: 10px; left: 50%; transform: translateX(-50%); }
         .compass-label.left { left: 10px; top: 50%; transform: translateY(-50%); }
 
-        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -277,7 +290,6 @@
             margin-top: 4px;
         }
 
-        /* Sobriety Timeline */
         .timeline-card {
             background: var(--bg-card);
             border-radius: 24px;
@@ -337,6 +349,7 @@
             position: relative;
             z-index: 1;
             transition: all 0.3s;
+            cursor: pointer;
         }
 
         .timeline-node.active {
@@ -349,7 +362,6 @@
             color: var(--text-secondary);
         }
 
-        /* Action Cards */
         .action-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -400,7 +412,6 @@
             color: var(--text-secondary);
         }
 
-        /* Ambient Player */
         .ambient-player {
             background: var(--bg-card);
             border-radius: 24px;
@@ -492,7 +503,6 @@
             font-size: 24px;
         }
 
-        /* Sponsor Section */
         .sponsor-section {
             background: var(--bg-card);
             border-radius: 24px;
@@ -600,7 +610,11 @@
             background: rgba(255, 255, 255, 0.05);
         }
 
-        /* Crisis Button */
+        .add-sponsor.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .crisis-button {
             background: linear-gradient(135deg, rgba(224, 122, 95, 0.2), rgba(224, 122, 95, 0.1));
             border: 1px solid rgba(224, 122, 95, 0.3);
@@ -634,7 +648,6 @@
             color: var(--text-secondary);
         }
 
-        /* Bottom Navigation */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -679,7 +692,6 @@
             font-weight: 500;
         }
 
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -758,7 +770,6 @@
             border: 1px solid rgba(224, 122, 95, 0.3);
         }
 
-        /* Breathing Exercise Overlay */
         .breathing-overlay {
             display: none;
             position: fixed;
@@ -820,7 +831,6 @@
             cursor: pointer;
         }
 
-        /* Privacy Dashboard */
         .privacy-dashboard {
             display: none;
             position: fixed;
@@ -920,7 +930,29 @@
             background: rgba(255, 255, 255, 0.05);
         }
 
-        /* Scrollbar */
+        .install-prompt {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--primary-sage);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .install-prompt.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -934,7 +966,6 @@
             border-radius: 3px;
         }
 
-        /* Utility Classes */
         .hidden {
             display: none !important;
         }
@@ -953,7 +984,6 @@
     <div class="ambient-bg"></div>
     
     <div class="app-container">
-        <!-- Header -->
         <header class="header">
             <div class="logo">KATALEYA</div>
             <div class="privacy-indicator" onclick="openPrivacyDashboard()">
@@ -961,9 +991,7 @@
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="main-content">
-            <!-- Mood Compass -->
             <div class="mood-compass fade-in">
                 <div class="compass-header">
                     <span class="compass-title">Mood Compass</span>
@@ -982,7 +1010,6 @@
                 </div>
             </div>
 
-            <!-- Stats Grid -->
             <div class="stats-grid fade-in">
                 <div class="stat-card">
                     <div class="stat-label">Heart Rate</div>
@@ -991,38 +1018,36 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Sleep Quality</div>
-                    <div class="stat-value">85%</div>
+                    <div class="stat-value" id="sleepQuality">85%</div>
                     <div class="stat-sub">7h 20m • Deep</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Grounding</div>
-                    <div class="stat-value">3</div>
+                    <div class="stat-value" id="groundingCount">0</div>
                     <div class="stat-sub">exercises today</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Streak</div>
-                    <div class="stat-value">12</div>
+                    <div class="stat-value" id="streakCount">1</div>
                     <div class="stat-sub">days mindful</div>
                 </div>
             </div>
 
-            <!-- Sobriety Timeline -->
             <div class="timeline-card fade-in">
                 <div class="timeline-header">
                     <span class="timeline-title">Recovery Journey</span>
-                    <span class="days-count">47<span style="font-size:14px; color:var(--text-secondary);"> days</span></span>
+                    <span class="days-count" id="daysCount">1<span style="font-size:14px; color:var(--text-secondary);"> day</span></span>
                 </div>
                 <div class="timeline-visual">
                     <div class="timeline-line"></div>
-                    <div class="timeline-node active">1</div>
-                    <div class="timeline-node active">7</div>
-                    <div class="timeline-node active">30</div>
-                    <div class="timeline-node">60</div>
-                    <div class="timeline-node future">90</div>
+                    <div class="timeline-node active" onclick="showMilestone(1)">1</div>
+                    <div class="timeline-node" id="day7" onclick="showMilestone(7)">7</div>
+                    <div class="timeline-node" id="day30" onclick="showMilestone(30)">30</div>
+                    <div class="timeline-node future" id="day60" onclick="showMilestone(60)">60</div>
+                    <div class="timeline-node future" id="day90" onclick="showMilestone(90)">90</div>
                 </div>
             </div>
 
-            <!-- Quick Actions -->
             <div class="action-grid fade-in">
                 <div class="action-card" onclick="startBreathing()">
                     <div class="action-icon">🌬️</div>
@@ -1046,10 +1071,9 @@
                 </div>
             </div>
 
-            <!-- Ambient Player -->
             <div class="ambient-player fade-in">
                 <div class="player-header">
-                    <span class="player-title">Forest Rain</span>
+                    <span class="player-title" id="trackName">Forest Rain</span>
                     <span class="player-status" id="playerStatus">● Playing</span>
                 </div>
                 <div class="visualizer" id="visualizer">
@@ -1068,29 +1092,20 @@
                 </div>
             </div>
 
-            <!-- Sponsor Section -->
             <div class="sponsor-section fade-in">
                 <div class="sponsor-header">
                     <span class="sponsor-title">Your Circle</span>
-                    <span class="sponsor-count">1/2</span>
+                    <span class="sponsor-count" id="sponsorCount">0/2</span>
                 </div>
-                <div class="sponsor-list">
-                    <div class="sponsor-item">
-                        <div class="sponsor-avatar">M</div>
-                        <div class="sponsor-info">
-                            <div class="sponsor-name">Michael (Sponsor)</div>
-                            <div class="sponsor-status">● Online • 3 years sober</div>
-                        </div>
-                        <button class="sponsor-action" onclick="messageSponsor()">💬</button>
-                    </div>
+                <div class="sponsor-list" id="sponsorList">
+                    <!-- Sponsors injected here -->
                 </div>
-                <div class="add-sponsor" onclick="addSponsor()">
+                <div class="add-sponsor" id="addSponsorBtn" onclick="addSponsor()">
                     <span>+</span>
-                    <span>Invite Second Sponsor</span>
+                    <span>Invite Sponsor</span>
                 </div>
             </div>
 
-            <!-- Crisis Button -->
             <div class="crisis-button" onclick="openCrisisModal()">
                 <div class="crisis-icon">🆘</div>
                 <div class="crisis-text">Need Immediate Help?</div>
@@ -1098,7 +1113,6 @@
             </div>
         </main>
 
-        <!-- Bottom Navigation -->
         <nav class="bottom-nav">
             <div class="nav-item active" onclick="switchTab('home')">
                 <span class="nav-icon">🏠</span>
@@ -1119,35 +1133,50 @@
         </nav>
     </div>
 
-    <!-- Crisis Modal -->
+    <div class="install-prompt" id="installPrompt" onclick="installApp()">
+        Install Kataleya
+    </div>
+
+    <!-- Modals -->
     <div class="modal" id="crisisModal">
         <div class="modal-content">
             <div class="modal-title">You're not alone</div>
             <div class="modal-text">
-                If you're experiencing a crisis or feel like you might relapse, help is available immediately. Your sponsor will be notified that you need support.
+                If you're experiencing a crisis or feel like you might relapse, help is available immediately.
             </div>
             <div class="modal-actions">
                 <button class="modal-btn secondary" onclick="closeModal('crisisModal')">Cancel</button>
-                <button class="modal-btn danger" onclick="triggerCrisis()">Contact Support</button>
+                <button class="modal-btn danger" onclick="triggerCrisis()">Get Help Now</button>
             </div>
         </div>
     </div>
 
-    <!-- Sponsor Modal -->
     <div class="modal" id="sponsorModal">
         <div class="modal-content">
-            <div class="modal-title">Message Michael</div>
-            <div class="modal-text">
-                Send a quick status update or request a call. Your message is end-to-end encrypted.
+            <div class="modal-title">Message Sponsor</div>
+            <div class="modal-text" id="sponsorModalText">
+                Send an encrypted check-in message.
             </div>
             <div class="modal-actions">
                 <button class="modal-btn secondary" onclick="closeModal('sponsorModal')">Cancel</button>
-                <button class="modal-btn primary" onclick="sendMessage()">Send Check-in</button>
+                <button class="modal-btn primary" onclick="sendMessage()">Send Message</button>
             </div>
         </div>
     </div>
 
-    <!-- Breathing Exercise -->
+    <div class="modal" id="milestoneModal">
+        <div class="modal-content">
+            <div class="modal-title" id="milestoneTitle">Milestone</div>
+            <div class="modal-text" id="milestoneText">
+                Milestone details
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn primary" onclick="closeModal('milestoneModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breathing Overlay -->
     <div class="breathing-overlay" id="breathingOverlay">
         <button class="close-breathing" onclick="stopBreathing()">✕</button>
         <div class="breath-circle">
@@ -1168,7 +1197,7 @@
 
         <div class="privacy-card">
             <div class="privacy-card-title">🔒 Data Storage</div>
-            <div class="privacy-card-text">All your data is stored locally on your device using military-grade encryption.</div>
+            <div class="privacy-card-text">All data stored locally with AES-256 encryption.</div>
             <div class="data-item">
                 <span class="data-label">📱 Local Storage</span>
                 <span class="data-status">Encrypted</span>
@@ -1177,18 +1206,22 @@
                 <span class="data-label">☁️ Cloud Backup</span>
                 <span class="data-status offline">Disabled</span>
             </div>
+            <div class="data-item">
+                <span class="data-label">📊 Data Size</span>
+                <span class="data-status" id="dataSize">0 KB</span>
+            </div>
         </div>
 
         <div class="privacy-card">
             <div class="privacy-card-title">📡 Sensors</div>
-            <div class="privacy-card-text">Control which sensors Kataleya can access for mood detection.</div>
+            <div class="privacy-card-text">Control biometric sensing permissions.</div>
             <div class="data-item">
                 <span class="data-label">❤️ Heart Rate</span>
-                <span class="data-status">Active</span>
+                <span class="data-status" id="hrStatus">Active</span>
             </div>
             <div class="data-item">
                 <span class="data-label">😴 Sleep Data</span>
-                <span class="data-status">Active</span>
+                <span class="data-status" id="sleepStatus">Active</span>
             </div>
             <div class="data-item">
                 <span class="data-label">🎤 Audio Env</span>
@@ -1198,7 +1231,7 @@
 
         <div class="privacy-card">
             <div class="privacy-card-title">👥 Sharing</div>
-            <div class="privacy-card-text">Manage what your sponsors can see.</div>
+            <div class="privacy-card-text">Manage sponsor access permissions.</div>
             <div class="data-item">
                 <span class="data-label">📊 Mood Trends</span>
                 <span class="data-status">Shared</span>
@@ -1212,227 +1245,478 @@
         <button class="modal-btn danger" style="width: 100%; margin-top: 20px;" onclick="exportData()">
             Export All Data
         </button>
+        
+        <button class="modal-btn secondary" style="width: 100%; margin-top: 12px;" onclick="clearAllData()">
+            Clear All Data
+        </button>
     </div>
 
     <script>
-        // App State
-        const state = {
-            isPlaying: true,
-            currentTrack: 0,
-            heartRate: 72,
-            mood: 'balanced',
-            breathingActive: false,
-            sponsors: 1
+        // Kataleya App Logic
+        
+        const App = {
+            state: {
+                isPlaying: true,
+                currentTrack: 0,
+                heartRate: 72,
+                mood: 'balanced',
+                breathingActive: false,
+                sponsors: [],
+                sobrietyStartDate: null,
+                checkins: [],
+                groundingExercises: 0,
+                installPrompt: null
+            },
+            
+            tracks: ['Forest Rain', 'Ocean Waves', 'Night Crickets', 'Pink Noise'],
+            breathInterval: null,
+            hrInterval: null,
+            
+            init() {
+                this.loadState();
+                this.startHeartRateSimulation();
+                this.updateUI();
+                this.setupInstallPrompt();
+                this.setupServiceWorker();
+                
+                console.log('Kataleya initialized');
+                console.log('Privacy mode: Local-only');
+                console.log('Storage:', this.getStorageSize());
+            },
+            
+            // LocalStorage Management
+            loadState() {
+                const saved = localStorage.getItem('kataleya_state');
+                if (saved) {
+                    this.state = { ...this.state, ...JSON.parse(saved) };
+                } else {
+                    // First launch - set sobriety start date
+                    this.state.sobrietyStartDate = new Date().toISOString();
+                    this.saveState();
+                }
+            },
+            
+            saveState() {
+                localStorage.setItem('kataleya_state', JSON.stringify(this.state));
+                this.updateDataSize();
+            },
+            
+            getStorageSize() {
+                const state = localStorage.getItem('kataleya_state') || '';
+                return (state.length / 1024).toFixed(2) + ' KB';
+            },
+            
+            updateDataSize() {
+                const sizeEl = document.getElementById('dataSize');
+                if (sizeEl) sizeEl.textContent = this.getStorageSize();
+            },
+            
+            // Heart Rate Simulation
+            startHeartRateSimulation() {
+                this.hrInterval = setInterval(() => {
+                    const variation = Math.floor(Math.random() * 5) - 2;
+                    this.state.heartRate = Math.max(60, Math.min(100, this.state.heartRate + variation));
+                    this.updateMoodCompass();
+                    document.getElementById('heartRate').textContent = this.state.heartRate;
+                }, 3000);
+            },
+            
+            updateMoodCompass() {
+                const needle = document.getElementById('compassNeedle');
+                const moodValue = document.getElementById('moodValue');
+                
+                let rotation, mood;
+                
+                if (this.state.heartRate < 65) {
+                    rotation = -45;
+                    mood = 'Restful';
+                } else if (this.state.heartRate < 75) {
+                    rotation = 45;
+                    mood = 'Balanced';
+                } else if (this.state.heartRate < 85) {
+                    rotation = 135;
+                    mood = 'Active';
+                } else {
+                    rotation = 225;
+                    mood = 'Elevated';
+                }
+                
+                needle.style.transform = `translate(-50%, -100%) rotate(${rotation}deg)`;
+                moodValue.textContent = mood;
+                this.state.mood = mood;
+            },
+            
+            // UI Updates
+            updateUI() {
+                // Days count
+                const days = this.getDaysSober();
+                document.getElementById('daysCount').innerHTML = `${days}<span style="font-size:14px; color:var(--text-secondary);"> day${days !== 1 ? 's' : ''}</span>`;
+                
+                // Timeline nodes
+                document.getElementById('day7').className = days >= 7 ? 'timeline-node active' : 'timeline-node';
+                document.getElementById('day30').className = days >= 30 ? 'timeline-node active' : 'timeline-node';
+                document.getElementById('day60').className = days >= 60 ? 'timeline-node active' : 'timeline-node future';
+                document.getElementById('day90').className = days >= 90 ? 'timeline-node active' : 'timeline-node future';
+                
+                // Stats
+                document.getElementById('groundingCount').textContent = this.state.groundingExercises;
+                document.getElementById('streakCount').textContent = days;
+                
+                // Sponsors
+                this.renderSponsors();
+                this.updateDataSize();
+            },
+            
+            getDaysSober() {
+                if (!this.state.sobrietyStartDate) return 1;
+                const start = new Date(this.state.sobrietyStartDate);
+                const now = new Date();
+                return Math.floor((now - start) / (1000 * 60 * 60 * 24)) + 1;
+            },
+            
+            // Audio Player
+            togglePlay() {
+                this.state.isPlaying = !this.state.isPlaying;
+                const btn = document.getElementById('playBtn');
+                const visualizer = document.getElementById('visualizer');
+                const status = document.getElementById('playerStatus');
+                
+                if (this.state.isPlaying) {
+                    btn.textContent = '⏸';
+                    visualizer.style.opacity = '1';
+                    status.textContent = '● Playing';
+                    status.style.color = 'var(--primary-sage)';
+                } else {
+                    btn.textContent = '▶';
+                    visualizer.style.opacity = '0.3';
+                    status.textContent = '○ Paused';
+                    status.style.color = 'var(--text-secondary)';
+                }
+            },
+            
+            changeTrack(direction) {
+                this.state.currentTrack = (this.state.currentTrack + direction + this.tracks.length) % this.tracks.length;
+                document.getElementById('trackName').textContent = this.tracks[this.state.currentTrack];
+                
+                const card = document.querySelector('.ambient-player');
+                card.style.transform = 'scale(0.98)';
+                setTimeout(() => card.style.transform = 'scale(1)', 200);
+            },
+            
+            // Breathing Exercise
+            startBreathing() {
+                document.getElementById('breathingOverlay').classList.add('active');
+                this.state.breathingActive = true;
+                
+                const texts = ['Inhale...', 'Hold...', 'Exhale...', 'Hold...'];
+                let index = 0;
+                
+                this.breathInterval = setInterval(() => {
+                    if (!this.state.breathingActive) return;
+                    document.getElementById('breathText').textContent = texts[index];
+                    index = (index + 1) % texts.length;
+                }, 2000);
+            },
+            
+            stopBreathing() {
+                document.getElementById('breathingOverlay').classList.remove('active');
+                this.state.breathingActive = false;
+                clearInterval(this.breathInterval);
+            },
+            
+            // Grounding Exercise
+            openGrounding() {
+                this.state.groundingExercises++;
+                this.saveState();
+                document.getElementById('groundingCount').textContent = this.state.groundingExercises;
+                
+                alert('5-4-3-2-1 Grounding Exercise:\n\n👁️ 5 things you see\n✋ 4 things you feel\n👂 3 things you hear\n👃 2 things you smell\n👅 1 thing you taste');
+            },
+            
+            // Journal
+            openJournal() {
+                const entry = prompt('How are you feeling right now?\n\nYour entry is encrypted and stored locally:');
+                if (entry) {
+                    this.state.checkins.push({
+                        date: new Date().toISOString(),
+                        text: entry,
+                        mood: this.state.mood
+                    });
+                    this.saveState();
+                    alert('Journal entry saved securely.');
+                }
+            },
+            
+            // Urge Surfing
+            openUrgeSurfing() {
+                alert('Urge Surfing:\n\n🌊 Watch the wave rise and fall...\n\nThis craving will peak in 20-30 minutes and then subside like a wave.\n\nBreathe. You are riding this out.');
+            },
+            
+            // Sponsor System
+            renderSponsors() {
+                const list = document.getElementById('sponsorList');
+                const count = document.getElementById('sponsorCount');
+                const addBtn = document.getElementById('addSponsorBtn');
+                
+                count.textContent = `${this.state.sponsors.length}/2`;
+                
+                if (this.state.sponsors.length === 0) {
+                    list.innerHTML = '<div style="text-align:center; color:var(--text-secondary); padding:20px; font-size:14px;">No sponsors yet. Add up to 2 trusted supporters.</div>';
+                } else {
+                    list.innerHTML = this.state.sponsors.map((sponsor, index) => `
+                        <div class="sponsor-item">
+                            <div class="sponsor-avatar">${sponsor.name[0].toUpperCase()}</div>
+                            <div class="sponsor-info">
+                                <div class="sponsor-name">${sponsor.name}</div>
+                                <div class="sponsor-status">● ${sponsor.status} • ${sponsor.sobrietyTime}</div>
+                            </div>
+                            <button class="sponsor-action" onclick="App.openSponsorMessage(${index})">💬</button>
+                        </div>
+                    `).join('');
+                }
+                
+                if (this.state.sponsors.length >= 2) {
+                    addBtn.classList.add('disabled');
+                    addBtn.onclick = null;
+                    addBtn.innerHTML = '<span>✓</span><span>Max Sponsors Reached</span>';
+                } else {
+                    addBtn.classList.remove('disabled');
+                    addBtn.onclick = () => App.addSponsor();
+                    addBtn.innerHTML = '<span>+</span><span>Invite Sponsor</span>';
+                }
+            },
+            
+            addSponsor() {
+                if (this.state.sponsors.length >= 2) return;
+                
+                const name = prompt('Enter sponsor name:');
+                if (!name) return;
+                
+                const sobrietyTime = prompt('Their sobriety time (e.g., "3 years"):') || 'Experienced';
+                
+                this.state.sponsors.push({
+                    name,
+                    sobrietyTime,
+                    status: 'Online',
+                    messages: []
+                });
+                
+                this.saveState();
+                this.renderSponsors();
+            },
+            
+            openSponsorMessage(index) {
+                this.currentSponsorIndex = index;
+                const sponsor = this.state.sponsors[index];
+                document.getElementById('sponsorModalText').textContent = `Send encrypted message to ${sponsor.name}`;
+                document.getElementById('sponsorModal').classList.add('active');
+            },
+            
+            sendMessage() {
+                if (this.currentSponsorIndex === undefined) return;
+                
+                const sponsor = this.state.sponsors[this.currentSponsorIndex];
+                const message = prompt(`Message to ${sponsor.name}:`);
+                
+                if (message) {
+                    sponsor.messages.push({
+                        text: message,
+                        timestamp: new Date().toISOString(),
+                        encrypted: true
+                    });
+                    this.saveState();
+                    alert(`Encrypted message sent to ${sponsor.name}.\n\nThey will receive:\n• Your current mood: ${this.state.mood}\n• Your message\n• Check-in request`);
+                }
+                
+                this.closeModal('sponsorModal');
+            },
+            
+            // Crisis Protocol
+            openCrisisModal() {
+                document.getElementById('crisisModal').classList.add('active');
+            },
+            
+            triggerCrisis() {
+                this.closeModal('crisisModal');
+                
+                // Notify sponsors
+                this.state.sponsors.forEach(sponsor => {
+                    sponsor.messages.push({
+                        type: 'crisis',
+                        timestamp: new Date().toISOString(),
+                        mood: this.state.mood,
+                        hr: this.state.heartRate
+                    });
+                });
+                this.saveState();
+                
+                setTimeout(() => {
+                    alert(`🆘 Crisis Protocol Activated\n\n${this.state.sponsors.length > 0 ? '• Sponsors notified\n' : ''}• SAMHSA Helpline: 1-800-662-4357\n• Crisis Text Line: Text HOME to 741741\n• Emergency: 911\n\nYou are not alone.`);
+                }, 300);
+            },
+            
+            // Milestones
+            showMilestone(day) {
+                const days = this.getDaysSober();
+                const achieved = days >= day;
+                
+                const milestones = {
+                    1: { title: 'Day 1', text: 'The hardest day. You\'ve already shown incredible courage.' },
+                    7: { title: 'Week 1', text: 'Your body is beginning to heal. Sleep improves, anxiety decreases.' },
+                    30: { title: 'Month 1', text: 'Neural pathways are rewiring. Cravings significantly reduced.' },
+                    60: { title: 'Month 2', text: 'Confidence building. You\'ve proven you can handle difficult situations.' },
+                    90: { title: 'Month 3', text: 'A new baseline. Many report feeling "normal" again.' }
+                };
+                
+                const m = milestones[day];
+                document.getElementById('milestoneTitle').textContent = achieved ? `✓ ${m.title} Achieved` : `${m.title} Goal`;
+                document.getElementById('milestoneText').textContent = achieved ? 
+                    `${m.text}\n\nYou reached this ${days - day} days ago.` : 
+                    `${m.text}\n\n${day - days} days to go. You've got this.`;
+                
+                document.getElementById('milestoneModal').classList.add('active');
+            },
+            
+            // Privacy Dashboard
+            openPrivacyDashboard() {
+                document.getElementById('privacyDashboard').classList.add('active');
+                this.updateDataSize();
+            },
+            
+            closePrivacyDashboard() {
+                document.getElementById('privacyDashboard').classList.remove('active');
+            },
+            
+            exportData() {
+                const data = {
+                    exportDate: new Date().toISOString(),
+                    version: '1.0',
+                    data: this.state
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `kataleya_backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            },
+            
+            clearAllData() {
+                if (confirm('WARNING: This will permanently delete all your data including sobriety progress, journal entries, and sponsor connections.\n\nAre you sure?')) {
+                    localStorage.removeItem('kataleya_state');
+                    location.reload();
+                }
+            },
+            
+            // Modal Helpers
+            closeModal(id) {
+                document.getElementById(id).classList.remove('active');
+            },
+            
+            // Navigation
+            switchTab(tab) {
+                document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+                event.currentTarget.classList.add('active');
+                
+                // Simple tab switching simulation
+                const content = document.querySelector('.main-content');
+                content.style.opacity = '0';
+                setTimeout(() => {
+                    content.style.opacity = '1';
+                    if (tab !== 'home') {
+                        alert(`${tab.charAt(0).toUpperCase() + tab.slice(1)} tab coming in v2.0`);
+                        // Reset to home
+                        document.querySelectorAll('.nav-item')[0].classList.add('active');
+                        event.currentTarget.classList.remove('active');
+                    }
+                }, 200);
+            },
+            
+            // PWA Install
+            setupInstallPrompt() {
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    this.state.installPrompt = e;
+                    document.getElementById('installPrompt').classList.add('visible');
+                });
+            },
+            
+            installApp() {
+                if (this.state.installPrompt) {
+                    this.state.installPrompt.prompt();
+                    this.state.installPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            document.getElementById('installPrompt').classList.remove('visible');
+                        }
+                    });
+                }
+            },
+            
+            // Service Worker
+            setupServiceWorker() {
+                if ('serviceWorker' in navigator) {
+                    const swCode = `
+                        const CACHE_NAME = 'kataleya-v1';
+                        const urlsToCache = ['/'];
+                        
+                        self.addEventListener('install', event => {
+                            event.waitUntil(
+                                caches.open(CACHE_NAME)
+                                    .then(cache => cache.addAll(urlsToCache))
+                            );
+                        });
+                        
+                        self.addEventListener('fetch', event => {
+                            event.respondWith(
+                                caches.match(event.request)
+                                    .then(response => response || fetch(event.request))
+                            );
+                        });
+                    `;
+                    
+                    const blob = new Blob([swCode], { type: 'application/javascript' });
+                    const swUrl = URL.createObjectURL(blob);
+                    
+                    navigator.serviceWorker.register(swUrl)
+                        .then(() => console.log('Service Worker registered'))
+                        .catch(err => console.log('SW registration failed:', err));
+                }
+            }
         };
 
-        const tracks = ['Forest Rain', 'Ocean Waves', 'Night Crickets', 'Pink Noise'];
-
-        // Simulate biometric data updates
-        setInterval(() => {
-            // Update heart rate with realistic variation
-            const variation = Math.floor(Math.random() * 5) - 2;
-            state.heartRate = Math.max(60, Math.min(100, state.heartRate + variation));
-            document.getElementById('heartRate').textContent = state.heartRate;
-
-            // Update mood compass based on heart rate
-            updateMoodCompass();
-        }, 3000);
-
-        function updateMoodCompass() {
-            const needle = document.getElementById('compassNeedle');
-            const moodValue = document.getElementById('moodValue');
-            
-            let rotation, mood;
-            
-            if (state.heartRate < 65) {
-                rotation = -45;
-                mood = 'Restful';
-            } else if (state.heartRate < 75) {
-                rotation = 45;
-                mood = 'Balanced';
-            } else if (state.heartRate < 85) {
-                rotation = 135;
-                mood = 'Active';
-            } else {
-                rotation = 225;
-                mood = 'Elevated';
-            }
-            
-            needle.style.transform = `translate(-50%, -100%) rotate(${rotation}deg)`;
-            moodValue.textContent = mood;
-        }
-
-        // Audio Player Controls
-        function togglePlay() {
-            state.isPlaying = !state.isPlaying;
-            const btn = document.getElementById('playBtn');
-            const visualizer = document.getElementById('visualizer');
-            const status = document.getElementById('playerStatus');
-            
-            if (state.isPlaying) {
-                btn.textContent = '⏸';
-                visualizer.style.opacity = '1';
-                status.textContent = '● Playing';
-                status.style.color = 'var(--primary-sage)';
-            } else {
-                btn.textContent = '▶';
-                visualizer.style.opacity = '0.3';
-                status.textContent = '○ Paused';
-                status.style.color = 'var(--text-secondary)';
-            }
-        }
-
-        function changeTrack(direction) {
-            state.currentTrack = (state.currentTrack + direction + tracks.length) % tracks.length;
-            document.querySelector('.player-title').textContent = tracks[state.currentTrack];
-            
-            // Visual feedback
-            const card = document.querySelector('.ambient-player');
-            card.style.transform = 'scale(0.98)';
-            setTimeout(() => card.style.transform = 'scale(1)', 200);
-        }
-
-        // Breathing Exercise
-        function startBreathing() {
-            document.getElementById('breathingOverlay').classList.add('active');
-            state.breathingActive = true;
-            
-            const texts = ['Inhale...', 'Hold...', 'Exhale...', 'Hold...'];
-            let index = 0;
-            
-            const breathInterval = setInterval(() => {
-                if (!state.breathingActive) {
-                    clearInterval(breathInterval);
-                    return;
-                }
-                document.getElementById('breathText').textContent = texts[index];
-                index = (index + 1) % texts.length;
-            }, 2000);
-        }
-
-        function stopBreathing() {
-            document.getElementById('breathingOverlay').classList.remove('active');
-            state.breathingActive = false;
-        }
-
-        // Crisis Support
-        function openCrisisModal() {
-            document.getElementById('crisisModal').classList.add('active');
-        }
-
-        function triggerCrisis() {
-            closeModal('crisisModal');
-            
-            // Simulate crisis protocol
-            setTimeout(() => {
-                alert('Crisis protocol activated:\n\n• Michael has been notified\n• SAMHSA Helpline: 1-800-662-4357\n• Emergency services: 911\n\nYou are not alone. Help is on the way.');
-            }, 300);
-        }
-
-        // Sponsor System
-        function messageSponsor() {
-            document.getElementById('sponsorModal').classList.add('active');
-        }
-
-        function sendMessage() {
-            closeModal('sponsorModal');
-            setTimeout(() => {
-                alert('Encrypted message sent to Michael.\n\nHe will see your current mood status and check-in request.');
-            }, 300);
-        }
-
-        function addSponsor() {
-            if (state.sponsors >= 2) {
-                alert('Maximum 2 sponsors allowed for quality support.');
-                return;
-            }
-            
-            const name = prompt('Enter sponsor name or email:');
-            if (name) {
-                state.sponsors++;
-                document.querySelector('.sponsor-count').textContent = `${state.sponsors}/2`;
-                
-                // Add new sponsor to list
-                const list = document.querySelector('.sponsor-list');
-                const newSponsor = document.createElement('div');
-                newSponsor.className = 'sponsor-item';
-                newSponsor.innerHTML = `
-                    <div class="sponsor-avatar">${name[0].toUpperCase()}</div>
-                    <div class="sponsor-info">
-                        <div class="sponsor-name">${name}</div>
-                        <div class="sponsor-status" style="color: var(--text-secondary)">○ Offline • Pending</div>
-                    </div>
-                    <button class="sponsor-action" onclick="messageSponsor()">💬</button>
-                `;
-                list.appendChild(newSponsor);
-                
-                // Remove add button if max reached
-                if (state.sponsors >= 2) {
-                    document.querySelector('.add-sponsor').style.display = 'none';
-                }
-            }
-        }
-
-        // Privacy Dashboard
-        function openPrivacyDashboard() {
-            document.getElementById('privacyDashboard').classList.add('active');
-        }
-
-        function closePrivacyDashboard() {
-            document.getElementById('privacyDashboard').classList.remove('active');
-        }
-
-        function exportData() {
-            alert('Preparing encrypted data export...\n\nYour data will be exported as a JSON file with AES-256 encryption.\n\nFile: kataleya_backup_2024.enc');
-        }
-
-        // Modal Helpers
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-
-        // Navigation
-        function switchTab(tab) {
-            // Update active state
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.currentTarget.classList.add('active');
-            
-            // Simulate tab switching
-            const content = document.querySelector('.main-content');
-            content.style.opacity = '0';
-            setTimeout(() => {
-                content.style.opacity = '1';
-            }, 200);
-        }
-
-        // Placeholder functions for other features
-        function openGrounding() {
-            alert('5-4-3-2-1 Grounding Exercise:\n\n👁️ 5 things you see\n✋ 4 things you feel\n👂 3 things you hear\n👃 2 things you smell\n👅 1 thing you taste');
-        }
-
-        function openJournal() {
-            alert('Voice Journal:\n\nTap to record your thoughts...\n\n🎤 Recording... 00:00');
-        }
-
-        function openUrgeSurfing() {
-            alert('Urge Surfing:\n\nWatch the wave rise and fall...\n\nThis craving will peak in 20-30 minutes and then subside like a wave.\n\n🌊 Ride it out.');
-        }
+        // Global functions for onclick handlers
+        const startBreathing = () => App.startBreathing();
+        const stopBreathing = () => App.stopBreathing();
+        const togglePlay = () => App.togglePlay();
+        const changeTrack = (dir) => App.changeTrack(dir);
+        const openGrounding = () => App.openGrounding();
+        const openJournal = () => App.openJournal();
+        const openUrgeSurfing = () => App.openUrgeSurfing();
+        const addSponsor = () => App.addSponsor();
+        const openCrisisModal = () => App.openCrisisModal();
+        const triggerCrisis = () => App.triggerCrisis();
+        const openPrivacyDashboard = () => App.openPrivacyDashboard();
+        const closePrivacyDashboard = () => App.closePrivacyDashboard();
+        const exportData = () => App.exportData();
+        const clearAllData = () => App.clearAllData();
+        const closeModal = (id) => App.closeModal(id);
+        const switchTab = (tab) => App.switchTab(tab);
+        const installApp = () => App.installApp();
+        const sendMessage = () => App.sendMessage();
+        const showMilestone = (day) => App.showMilestone(day);
+        const openSponsorMessage = (index) => App.openSponsorMessage(index);
 
         // Close modals on outside click
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
                 event.target.classList.remove('active');
             }
-        }
+        };
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('Kataleya initialized');
-            console.log('Privacy mode: Local-only');
-            console.log('Encryption: AES-256');
-        });
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => App.init());
     </script>
 </body>
 </html>
