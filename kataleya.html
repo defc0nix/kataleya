@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kataleya — Mindful Digital Companion</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --k-forest: #1a2e1e;
+  --k-moss: #2d4a32;
+  --k-sage: #4a7c5a;
+  --k-mint: #7faa8b;
+  --k-dew: #b8d4be;
+  --k-fog: #e8f0ea;
+  --k-amber: #c8864a;
+  --k-amber-light: #e8b07a;
+  --k-muted: #7faa8b;
+}
+
+body {
+  background: var(--k-forest);
+  font-family: 'DM Sans', sans-serif;
+  color: var(--k-fog);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 0;
+}
+
+.phone-frame {
+  width: 390px;
+  min-height: 100vh;
+  background: var(--k-forest);
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.07;
+}
+.orb1 { width: 420px; height: 420px; background: var(--k-sage); top: -140px; right: -80px; animation: drift 20s ease-in-out infinite; }
+.orb2 { width: 280px; height: 280px; background: var(--k-amber); bottom: 60px; left: -70px; animation: drift2 25s ease-in-out infinite; }
+
+@keyframes drift { 0%,100%{transform:translate(0,0)} 50%{transform:translate(18px,-25px)} }
+@keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-14px,18px)} }
+
+.content { position: relative; z-index: 1; padding-bottom: 40px; }
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 44px 24px 0;
+}
+
+.logo-group { display: flex; align-items: center; gap: 10px; }
+
+.leaf-svg { animation: sway 5s ease-in-out infinite; transform-origin: bottom center; }
+@keyframes sway { 0%,100%{transform:rotate(-4deg)} 50%{transform:rotate(4deg)} }
+
+.logo-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 21px;
+  font-weight: 300;
+  letter-spacing: 0.09em;
+  color: var(--k-fog);
+}
+
+.logo-sub {
+  font-size: 9px;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  color: var(--k-muted);
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.privacy-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: var(--k-mint);
+  background: rgba(127,170,139,0.08);
+  border: 0.5px solid rgba(127,170,139,0.22);
+  padding: 5px 11px;
+  border-radius: 20px;
+}
+
+.pulse-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--k-mint);
+  animation: pulse 2.8s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* Ring */
+.ring-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 24px 0;
+}
+
+.ring-wrap { position: relative; width: 196px; height: 196px; }
+
+.ring-svg-el { transform: rotate(-90deg); width: 196px; height: 196px; }
+
+.ring-bg { fill:none; stroke:rgba(127,170,139,0.1); stroke-width:9; }
+
+.ring-fill {
+  fill:none;
+  stroke: url(#rg);
+  stroke-width:9;
+  stroke-linecap: round;
+  stroke-dasharray: 489;
+  stroke-dashoffset: 98;
+  animation: fillIn 2.2s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes fillIn { from{stroke-dashoffset:489} to{stroke-dashoffset:98} }
+
+.ring-text-layer {
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+.days-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 56px;
+  font-weight: 300;
+  line-height: 1;
+  color: var(--k-fog);
+  animation: riseIn .9s ease-out .4s both;
+}
+.days-label {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--k-muted);
+  text-transform: uppercase;
+  margin-top: 5px;
+  animation: riseIn .9s ease-out .6s both;
+}
+.days-next {
+  font-size: 10px;
+  color: var(--k-amber-light);
+  margin-top: 7px;
+  animation: riseIn .9s ease-out .8s both;
+}
+
+@keyframes riseIn { from{opacity:0;transform:translateY(7px)} to{opacity:1;transform:none} }
+
+.chips {
+  display: flex;
+  gap: 7px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.chip {
+  font-size: 10px;
+  font-weight: 400;
+  padding: 4px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+}
+.chip-done { background: rgba(127,170,139,0.13); color: var(--k-mint); border: 0.5px solid rgba(127,170,139,0.28); }
+.chip-next { background: rgba(200,134,74,0.1); color: var(--k-amber-light); border: 0.5px solid rgba(200,134,74,0.25); }
+
+/* Divider */
+.div { height: 0.5px; background: rgba(127,170,139,0.13); margin: 22px 24px 0; }
+
+/* Mood */
+.section { padding: 18px 24px 0; }
+.sec-label {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--k-muted);
+  margin-bottom: 12px;
+}
+
+.mood-row { display: flex; gap: 7px; }
+.mood-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 4px;
+  background: rgba(45,74,50,0.35);
+  border: 0.5px solid rgba(127,170,139,0.13);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.mood-btn:hover { background: rgba(45,74,50,0.6); border-color: rgba(127,170,139,0.3); transform: translateY(-2px); }
+.mood-btn.active {
+  background: rgba(127,170,139,0.16);
+  border-color: rgba(127,170,139,0.45);
+  box-shadow: 0 0 0 1px rgba(127,170,139,0.12);
+}
+.mood-em { font-size: 18px; }
+.mood-lbl { font-size: 9px; font-weight: 400; color: var(--k-muted); letter-spacing: 0.04em; }
+
+/* Journal */
+.journal-box {
+  width: 100%;
+  background: rgba(45,74,50,0.28);
+  border: 0.5px solid rgba(127,170,139,0.16);
+  border-radius: 12px;
+  padding: 13px 15px;
+  color: var(--k-fog);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.65;
+  resize: none;
+  outline: none;
+  transition: border-color .2s, background .2s;
+  min-height: 76px;
+}
+.journal-box::placeholder { color: rgba(127,170,139,0.38); }
+.journal-box:focus { border-color: rgba(127,170,139,0.38); background: rgba(45,74,50,0.45); }
+
+.jfoot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+.enc-note {
+  font-size: 10px;
+  color: rgba(127,170,139,0.44);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.save-btn {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.07em;
+  color: var(--k-forest);
+  background: var(--k-mint);
+  border: none;
+  padding: 7px 17px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.save-btn:hover { background: var(--k-dew); }
+
+/* Sponsor */
+.sponsor-bar {
+  margin: 18px 24px 0;
+  background: rgba(200,134,74,0.07);
+  border: 0.5px solid rgba(200,134,74,0.18);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.spon-left { display: flex; align-items: center; gap: 10px; }
+.spon-av {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(200,134,74,0.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 500; color: var(--k-amber-light);
+}
+.spon-name { font-size: 12px; font-weight: 400; color: var(--k-fog); }
+.spon-sub { font-size: 10px; color: var(--k-muted); margin-top: 1px; }
+.e2e-badge { font-size: 10px; color: rgba(200,134,74,0.55); letter-spacing: 0.06em; display: flex; align-items: center; gap: 3px; }
+
+/* Tools */
+.tools-grid {
+  padding: 18px 24px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+.tool-card {
+  background: rgba(45,74,50,0.32);
+  border: 0.5px solid rgba(127,170,139,0.13);
+  border-radius: 12px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.22s;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.tool-card:hover { background: rgba(45,74,50,0.58); border-color: rgba(127,170,139,0.28); transform: translateY(-2px); }
+.tool-icon {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.ti-green { background: rgba(127,170,139,0.13); }
+.ti-amber { background: rgba(200,134,74,0.13); }
+.tool-name { font-size: 13px; font-weight: 500; color: var(--k-fog); }
+.tool-desc { font-size: 10px; font-weight: 300; color: var(--k-muted); line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  <div class="bg-orb orb1"></div>
+  <div class="bg-orb orb2"></div>
+
+  <div class="content">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo-group">
+        <svg class="leaf-svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <path d="M16 4C10 4 5 10 5 18C5 24 9 28 16 28C16 28 16 16 28 10C24 5 20 4 16 4Z" fill="#7faa8b" opacity="0.85"/>
+          <path d="M16 28C16 28 14 20 8 14" stroke="#b8d4be" stroke-width="1.2" stroke-linecap="round" opacity="0.55"/>
+        </svg>
+        <div>
+          <div class="logo-text">Kataleya</div>
+          <div class="logo-sub">Recovery Companion</div>
+        </div>
+      </div>
+      <div class="privacy-pill">
+        <div class="pulse-dot"></div>
+        local&#8209;only
+      </div>
+    </div>
+
+    <!-- Ring -->
+    <div class="ring-section">
+      <div class="ring-wrap">
+        <svg class="ring-svg-el" viewBox="0 0 196 196">
+          <defs>
+            <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#4a7c5a"/>
+              <stop offset="100%" stop-color="#b8d4be"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-bg" cx="98" cy="98" r="78"/>
+          <circle class="ring-fill" cx="98" cy="98" r="78"/>
+        </svg>
+        <div class="ring-text-layer">
+          <div class="days-num">80</div>
+          <div class="days-label">days free</div>
+          <div class="days-next">→ 90 day milestone</div>
+        </div>
+      </div>
+      <div class="chips">
+        <span class="chip chip-done">7 days</span>
+        <span class="chip chip-done">30 days</span>
+        <span class="chip chip-done">60 days</span>
+        <span class="chip chip-next">90 days</span>
+      </div>
+    </div>
+
+    <div class="div"></div>
+
+    <!-- Mood -->
+    <div class="section">
+      <div class="sec-label">How are you right now?</div>
+      <div class="mood-row">
+        <button class="mood-btn" onclick="setMood(this)"><span class="mood-em">🌿</span><span class="mood-lbl">grounded</span></button>
+        <button class="mood-btn active" onclick="setMood(this)"><span class="mood-em">🌤</span><span class="mood-lbl">hopeful</span></button>
+        <button class="mood-btn" onclick="setMood(this)"><span class="mood-em">🌊</span><span class="mood-lbl">unsettled</span></button>
+        <button class="mood-btn" onclick="setMood(this)"><span class="mood-em">🌑</span><span class="mood-lbl">struggling</span></button>
+        <button class="mood-btn" onclick="setMood(this)"><span class="mood-em">🔥</span><span class="mood-lbl">strong</span></button>
+      </div>
+    </div>
+
+    <div class="div"></div>
+
+    <!-- Journal -->
+    <div class="section">
+      <div class="sec-label">Today's reflection</div>
+      <textarea class="journal-box" placeholder="What's on your mind today… this space is yours alone." rows="3"></textarea>
+      <div class="jfoot">
+        <div class="enc-note">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><rect x="2" y="5" width="7" height="5" rx="1.2" fill="rgba(127,170,139,0.45)"/><path d="M4 5V3.5a1.5 1.5 0 013 0V5" stroke="rgba(127,170,139,0.45)" stroke-width="1.1" stroke-linecap="round"/></svg>
+          encrypted on-device · never uploaded
+        </div>
+        <button class="save-btn">save quietly</button>
+      </div>
+    </div>
+
+    <!-- Sponsor -->
+    <div class="sponsor-bar">
+      <div class="spon-left">
+        <div class="spon-av">MR</div>
+        <div>
+          <div class="spon-name">Maya R. — sponsor</div>
+          <div class="spon-sub">sees milestones only · end-to-end encrypted</div>
+        </div>
+      </div>
+      <div class="e2e-badge">
+        <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="2" y="5" width="7" height="5" rx="1.2" fill="rgba(200,134,74,0.5)"/><path d="M4 5V3.5a1.5 1.5 0 013 0V5" stroke="rgba(200,134,74,0.5)" stroke-width="1.1" stroke-linecap="round"/></svg>
+        E2E
+      </div>
+    </div>
+
+    <!-- Tools -->
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-icon ti-green">🌬</div>
+        <div class="tool-name">Breathe</div>
+        <div class="tool-desc">Guided breathing for craving moments</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon ti-amber">⚓</div>
+        <div class="tool-name">Ground</div>
+        <div class="tool-desc">Anchor to the present moment</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon ti-green">🌱</div>
+        <div class="tool-name">Affirm</div>
+        <div class="tool-desc">Gentle reminders of your strength</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon ti-amber">🌿</div>
+        <div class="tool-name">Insights</div>
+        <div class="tool-desc">Your patterns, visible only to you</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function setMood(el) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>
